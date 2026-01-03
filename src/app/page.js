@@ -39,11 +39,11 @@ export default function Page() {
       {/* TELA INICIAL: EXPLOSÃO FLUIDA */}
       <AnimatePresence>
         {!iniciado && (
-          <div className="absolute inset-0 flex items-center justify-center z-[100] bg-black">
+          <div className="absolute inset-0 flex items-center justify-center z-100 bg-black">
             <motion.button
               key="btn-inicio"
               onClick={() => setIniciado(true)}
-              className="text-red-600 w-24 h-24 cursor-pointer bg-transparent border-none z-[110] outline-none"
+              className="text-red-600 w-24 h-24 cursor-default bg-transparent border-none z-110 outline-none"
               animate={{ scale: [1, 1.1, 1] }}
               transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
             >
@@ -85,7 +85,7 @@ export default function Page() {
             className="relative z-50 w-full max-w-md h-full flex flex-col items-center pt-12 px-4"
           >
             {/* ÁREA DE ARRASTE EXPANDIDA (FOTO + TEXTO) */}
-            <div className="w-full max-w-[310px] relative">
+            <div className="w-full max-w-77.5 relative">
               <AnimatePresence initial={false} custom={direcao} mode="wait">
                 <motion.div
                   key={indice}
@@ -100,11 +100,11 @@ export default function Page() {
                     if (offset.x < -50) mudarFoto(1);
                     else if (offset.x > 50) mudarFoto(-1);
                   }}
-                  className="flex flex-col items-center w-full touch-none cursor-grab active:cursor-grabbing"
+                  className="flex flex-col items-center w-full touch-none cursor-default active:cursor-default"
                   style={{ willChange: "transform, opacity" }}
                 >
                   {/* FOTO */}
-                  <div className="w-full aspect-[4/5] rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-neutral-900 pointer-events-none">
+                  <div className="w-full aspect-4/5 rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-neutral-900 pointer-events-none">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img 
                       src={momentos[indice].url} 
@@ -115,7 +115,7 @@ export default function Page() {
                   </div>
                   
                   {/* TEXTO: COM SOMBRA E PESO PARA NÃO SER SOBREPOSTO */}
-                  <div className="mt-8 min-h-[120px] flex items-start justify-center text-center">
+                  <div className="mt-8 min-h-30 flex items-start justify-center text-center">
                     <p className="text-xl md:text-2xl text-white font-medium italic leading-relaxed px-4 drop-shadow-[0_4px_12px_rgba(0,0,0,1)]">
                       “{momentos[indice].texto}”
                     </p>
