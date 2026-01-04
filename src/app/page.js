@@ -1,13 +1,13 @@
 "use client";
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const momentos = [
-  { url: process.env.NEXT_PUBLIC_FOTO_1 || '', texto: 'Escreva aqui sua primeira mensagem especial...' },
-  { url: process.env.NEXT_PUBLIC_FOTO_2 || '', texto: 'Escreva aqui sua segunda mensagem especial...' },
-  { url: process.env.NEXT_PUBLIC_FOTO_3 || '', texto: 'Escreva aqui sua terceira mensagem especial...' },
-  { url: process.env.NEXT_PUBLIC_FOTO_4 || '', texto: 'Escreva aqui sua quarta mensagem especial...' },
-  { url: process.env.NEXT_PUBLIC_FOTO_5 || '', texto: 'Escreva aqui sua quinta mensagem especial...' },
+  { url: process.env.NEXT_PUBLIC_FOTO_1 || '', texto: 'Sua primeira mensagem aqui...' },
+  { url: process.env.NEXT_PUBLIC_FOTO_2 || '', texto: 'Sua segunda mensagem aqui...' },
+  { url: process.env.NEXT_PUBLIC_FOTO_3 || '', texto: 'Sua terceira mensagem aqui...' },
+  { url: process.env.NEXT_PUBLIC_FOTO_4 || '', texto: 'Sua quarta mensagem aqui...' },
+  { url: process.env.NEXT_PUBLIC_FOTO_5 || '', texto: 'Sua quinta mensagem aqui...' },
 ];
 
 const HeartSVG = ({ className, style }) => (
@@ -18,31 +18,52 @@ const HeartSVG = ({ className, style }) => (
 
 export default function Page() {
   const [iniciado, setIniciado] = useState(false);
+  const [mostrarFrase, setMostrarFrase] = useState(false);
+  const [exibirFotos, setExibirFotos] = useState(false);
   const [indice, setIndice] = useState(0);
   const [direcao, setDirecao] = useState(1);
+  const audioRef = useRef(null);
 
   const mudarFoto = useCallback((novaDirecao) => {
     setDirecao(novaDirecao);
     setIndice((prev) => (novaDirecao === 1 ? (prev + 1) % momentos.length : (prev - 1 + momentos.length) % momentos.length));
   }, []);
 
+  const iniciarTudo = () => {
+    setIniciado(true);
+    setMostrarFrase(true);
+    if (audioRef.current) {
+      audioRef.current.play().catch(e => console.log("Erro ao tocar áudio:", e));
+    }
+    
+    setTimeout(() => {
+      setMostrarFrase(false);
+      setTimeout(() => {
+        setExibirFotos(true);
+      }, 2500); 
+    }, 8000);
+  };
+
   useEffect(() => {
-    if (iniciado) {
+    if (iniciado && exibirFotos) {
       const timer = setInterval(() => mudarFoto(1), 20000);
       return () => clearInterval(timer);
     }
-  }, [iniciado, mudarFoto]);
+  }, [iniciado, exibirFotos, mudarFoto]);
 
   return (
-    <main className="relative min-h-screen w-full bg-black flex flex-col items-center justify-start overflow-hidden font-sans select-none">
+    <main className="relative min-h-screen w-full bg-black flex flex-col items-center justify-center overflow-hidden font-sans select-none cursor-default">
       
-      {/* TELA INICIAL: EXPLOSÃO FLUIDA */}
+      <audio ref={audioRef} src="/musica.mp3" loop />
+
+      {/* TELA INICIAL */}
       <AnimatePresence>
         {!iniciado && (
           <div className="absolute inset-0 flex items-center justify-center z-100 bg-black">
             <motion.button
               key="btn-inicio"
-              onClick={() => setIniciado(true)}
+              onClick={iniciarTudo}
+              exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
               className="text-red-600 w-24 h-24 cursor-default bg-transparent border-none z-110 outline-none"
               animate={{ scale: [1, 1.1, 1] }}
               transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
@@ -56,7 +77,7 @@ export default function Page() {
                 exit={{ 
                   scale: 80, 
                   opacity: 0,
-                  transition: { delay: i * 0.15, duration: 1.5, ease: "easeOut" } 
+                  transition: { delay: i * 0.1, duration: 1.2, ease: "easeOut" } 
                 }}
                 className="absolute w-16 h-16 text-red-600 pointer-events-none"
                 style={{ willChange: "transform, opacity" }}
@@ -68,73 +89,77 @@ export default function Page() {
         )}
       </AnimatePresence>
 
-      {/* CONTEÚDO PRINCIPAL */}
+      {/* FUNDO: CORAÇÕES MAIS VISÍVEIS E RÁPIDOS */}
       {iniciado && (
-        <>
-          {/* FUNDO: CORAÇÕES MENORES E ATRÁS DE TUDO */}
-          <div className="absolute inset-0 z-0 pointer-events-none opacity-40">
-            {[...Array(30)].map((_, i) => (
-              <FallingHeart key={`heart-${i}`} />
-            ))}
-          </div>
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          {[...Array(55)].map((_, i) => (
+            <FallingHeart key={`heart-${i}`} />
+          ))}
+        </div>
+      )}
 
-          <motion.div 
+      {/* CENA 1: FRASE GRANDE */}
+      <AnimatePresence>
+        {iniciado && mostrarFrase && (
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="relative z-50 w-full max-w-md h-full flex flex-col items-center pt-12 px-4"
+            exit={{ opacity: 0, filter: "blur(20px)" }}
+            transition={{ duration: 2.5, ease: "easeInOut" }}
+            className="absolute z-50 text-center px-6"
           >
-            {/* ÁREA DE ARRASTE EXPANDIDA (FOTO + TEXTO) */}
-            <div className="w-full max-w-77.5 relative">
-              <AnimatePresence initial={false} custom={direcao} mode="wait">
-                <motion.div
-                  key={indice}
-                  custom={direcao}
-                  initial={{ x: direcao > 0 ? 150 : -150, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  exit={{ x: direcao > 0 ? -150 : 150, opacity: 0 }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
-                  drag="x"
-                  dragConstraints={{ left: 0, right: 0 }}
-                  onDragEnd={(e, { offset }) => {
-                    if (offset.x < -50) mudarFoto(1);
-                    else if (offset.x > 50) mudarFoto(-1);
-                  }}
-                  className="flex flex-col items-center w-full touch-none cursor-default active:cursor-default"
-                  style={{ willChange: "transform, opacity" }}
-                >
-                  {/* FOTO */}
-                  <div className="w-full aspect-4/5 rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-neutral-900 pointer-events-none">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img 
-                      src={momentos[indice].url} 
-                      className="w-full h-full object-cover" 
-                      alt="" 
-                      loading="eager"
-                    />
-                  </div>
-                  
-                  {/* TEXTO: COM SOMBRA E PESO PARA NÃO SER SOBREPOSTO */}
-                  <div className="mt-8 min-h-30 flex items-start justify-center text-center">
-                    <p className="text-xl md:text-2xl text-white font-medium italic leading-relaxed px-4 drop-shadow-[0_4px_12px_rgba(0,0,0,1)]">
-                      “{momentos[indice].texto}”
-                    </p>
-                  </div>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-
-            {/* INDICADORES */}
-            <div className="flex gap-3 mt-4 mb-8">
-              {momentos.map((_, i) => (
-                <div 
-                  key={i}
-                  className={`h-1.5 rounded-full transition-all duration-500 ${i === indice ? 'w-8 bg-red-600' : 'w-2 bg-white/30'}`} 
-                />
-              ))}
-            </div>
+            <h1 className="text-4xl md:text-6xl text-white font-bold italic drop-shadow-[0_0_25px_rgba(255,0,0,0.6)]">
+              Feliz 1 ano de namoro! ❤️
+            </h1>
           </motion.div>
-        </>
+        )}
+      </AnimatePresence>
+
+      {/* CENA 2: ÁLBUM */}
+      {iniciado && exibirFotos && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 2.5 }}
+          className="relative z-50 w-full max-w-md h-full flex flex-col items-center pt-12 px-4"
+        >
+          <div className="w-full max-w-77.5 relative">
+            <AnimatePresence initial={false} custom={direcao} mode="wait">
+              <motion.div
+                key={indice}
+                custom={direcao}
+                initial={{ x: direcao > 0 ? 150 : -150, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: direcao > 0 ? -150 : 150, opacity: 0 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                onDragEnd={(e, { offset }) => {
+                  if (offset.x < -50) mudarFoto(1);
+                  else if (offset.x > 50) mudarFoto(-1);
+                }}
+                className="flex flex-col items-center w-full touch-none cursor-default"
+                style={{ willChange: "transform, opacity" }}
+              >
+                <div className="w-full aspect-4/5 rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-neutral-900 pointer-events-none">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={momentos[indice].url} className="w-full h-full object-cover" alt="" loading="eager" />
+                </div>
+                <div className="mt-8 min-h-30 flex items-start justify-center text-center">
+                  <p className="text-xl md:text-2xl text-white font-medium italic leading-relaxed px-4 drop-shadow-[0_4px_12px_rgba(0,0,0,1)]">
+                    “{momentos[indice].texto}”
+                  </p>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          <div className="flex gap-3 mt-4 mb-8">
+            {momentos.map((_, i) => (
+              <div key={i} className={`h-1.5 rounded-full transition-all duration-500 cursor-default ${i === indice ? 'w-8 bg-red-600' : 'w-2 bg-white/30'}`} />
+            ))}
+          </div>
+        </motion.div>
       )}
     </main>
   );
@@ -146,20 +171,18 @@ function FallingHeart() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     setConf({
       x: Math.random() * 100,
-      delay: Math.random() * 20,
-      duration: 15 + Math.random() * 10,
-      size: 15 + Math.random() * 15
+      delay: Math.random() * 15,
+      duration: 8 + Math.random() * 7, // Mais rápido (antes era 15-25s)
+      size: 10 + Math.random() * 15
     });
   }, []);
-
   if (!conf) return null;
-
   return (
     <motion.div
       initial={{ y: "110vh", x: `${conf.x}vw`, opacity: 0 }}
-      animate={{ y: "-10vh", opacity: [0, 0.5, 0] }}
+      animate={{ y: "-10vh", opacity: [0, 0.6, 0] }} // Opacidade aumentada
       transition={{ duration: conf.duration, repeat: Infinity, delay: conf.delay, ease: "linear" }}
-      className="absolute text-red-600/30"
+      className="absolute text-red-600/40"
       style={{ width: conf.size, height: conf.size, willChange: "transform" }}
     >
       <HeartSVG className="w-full h-full" />
