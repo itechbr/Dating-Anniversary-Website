@@ -64,7 +64,7 @@ export default function Page() {
       onClick={pularFrase}
       className="relative min-h-screen w-full bg-black flex flex-col items-center justify-center overflow-hidden font-sans select-none cursor-default"
     >
-      <audio ref={audioRef} src="/musica.mp3" loop />
+      <audio ref={audioRef} src="/You're_my_favourite_song.mp3" loop />
 
       {/* TELA INICIAL */}
       <AnimatePresence>
